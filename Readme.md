@@ -1,6 +1,5 @@
-# Project Name
+# Korosuke
 
-Korosuke
 
 ## Table of Contents
 
