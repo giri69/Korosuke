@@ -1,6 +1,5 @@
 # Korosuke 
 
-Korosuke
 
 ## Table of Contents
 
