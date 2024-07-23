@@ -20,7 +20,6 @@ documents = loader.load()
 print("2")
 print(documents)
 print("3")
-print(documents[0].page_content)
 
 
 text_splitter = CharacterTextSplitter(
@@ -68,6 +67,7 @@ rag_chain = (
 
 class Uploadda(BaseModel):
     name: str
+    context: str
 
 @app.get('/')
 async def root():
@@ -75,5 +75,5 @@ async def root():
 
 @app.post('/ask')
 def root(data: Uploadda):
-   
-   return {"message": rag_chain.invoke({"question": data.name})}
+   return {"message": rag_chain.invoke({"question": data.name,
+                                        "context": data.context})}
