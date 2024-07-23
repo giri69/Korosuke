@@ -14,7 +14,7 @@ Instructions on how to install and set up the project.
 git clone https://github.com/sushilpandeyy/Korosuke.git
 
 # Navigate to the project directory
-cd Korosuke
+cd Korosuke 
 
 # Install dependencies
 npm install

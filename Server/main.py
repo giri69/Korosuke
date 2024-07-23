@@ -8,6 +8,8 @@ from operator import itemgetter
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms import Ollama
+from pydantic import BaseModel
+
 
 app=FastAPI()
 
@@ -64,8 +66,14 @@ rag_chain = (
     | StrOutputParser()
 )
 
-
+class Uploadda(BaseModel):
+    name: str
 
 @app.get('/')
 async def root():
     return {"message": rag_chain.invoke({"question": "What is evil quartet? explain properly"})}
+
+@app.post('/ask')
+def root(data: Uploadda):
+   
+   return {"message": rag_chain.invoke({"question": data.name})}
