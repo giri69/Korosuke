@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from dotenv import load_dotenv
 from langchain.text_splitter import CharacterTextSplitter
@@ -9,6 +9,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms import Ollama
 from pydantic import BaseModel
+import os
+import shutil
 
 
 app=FastAPI()
@@ -18,8 +20,9 @@ loader = PyPDFDirectoryLoader('data/')
 print("1")
 documents = loader.load()
 print("2")
-print(documents)
+#print(documents)
 print("3")
+#print(documents[0].page_content)
 
 
 text_splitter = CharacterTextSplitter(
@@ -43,7 +46,7 @@ retriever = index.as_retriever()
 
 template = """
 
-Answer the following question:
+Answer the following question :
 Question: {question}
 
 Answer the question based only on the following context:
@@ -67,13 +70,23 @@ rag_chain = (
 
 class Uploadda(BaseModel):
     name: str
-    context: str
+
+UPLOAD_DIR = "/Users/sushilpandey/Documents/Mine/Research/Korosuke/Server/data"  # Directory where files will be saved
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.get('/')
 async def root():
     return {"message": rag_chain.invoke({"question": "What is evil quartet? explain properly"})}
 
 @app.post('/ask')
-def root(data: Uploadda):
-   return {"message": rag_chain.invoke({"question": data.name,
-                                        "context": data.context})}
+async def ask_question(data: Uploadda):
+    print(data)
+    response = rag_chain.invoke({"question": data.name})
+    return {"message": response}
+
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    file_location = f"{UPLOAD_DIR}/{file.filename}"
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"info": f"file '{file.filename}' saved at '{file_location}'"}
