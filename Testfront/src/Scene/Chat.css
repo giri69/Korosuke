@@ -1,0 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #282c34; /* Dark background color */
+    color: #fff; /* Light text color */
+  }
+  
+  .App {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .chat-container {
+    width: 70%;
+    max-height: 800px;
+    background-color: #343a40; /* Slightly lighter grey for chat container */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .chat-box {
+    flex: 1;
+    overflow-y: auto; /* Enable scrolling for messages */
+    padding: 20px;
+    color: #fff; /* Text color for messages */
+  }
+  
+  .message-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .message {
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    border-radius: 4px;
+  }
+  
+  .user {
+    align-self: flex-end; /* Right align user messages */
+    background-color: #007bff; /* User message background color */
+  }
+  
+  .bot {
+    align-self: flex-start; /* Left align bot messages */
+    background-color: #28a745; /* Bot message background color */
+  }
+  
+  .input-field {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+  }
+  
+  .input-field input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #282c34; /* Match background color to chat container */
+    color: #fff; /* Text color for input field */
+  }
+  
+  .input-field button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    border: none;
+    background-color: #007bff; /* Match button color to user message background */
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  @media (max-width: 768px) {
+    .chat-container {
+      width: 100%;
+      border-radius: 0;
+    }
+  }
+  
