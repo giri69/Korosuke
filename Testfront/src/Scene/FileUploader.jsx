@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+
 
 const FileUploader = () => {
   const [files, setFiles] = useState([]);
@@ -98,7 +100,7 @@ const FileUploader = () => {
           >
             {modelPreparing ? 'Preparing model...' : 'Prepare model'}
           </button>
-          <button style={styles.chatButton}>Chat</button>
+          <Link to={"/testchat"}><button style={styles.chatButton}>Chat</button></Link>
         </div>
       )}
     </div>
