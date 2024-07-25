@@ -28,7 +28,7 @@ def startmodal():
     )
     chunks = text_splitter.split_documents(documents)
     
-    index = Chroma.from_documents(chunks, OllamaEmbeddings(model="mxbai-embed-large", show_progress=True))
+    index = Chroma.from_documents(chunks, OllamaEmbeddings(model="mxbai-embed-large", show_progress=True), persist_directory="./chroma_db")
     retriever = index.as_retriever()
     
     template = """
