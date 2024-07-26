@@ -60,7 +60,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-UPLOAD_DIR = "/Users/sushilpandey/Documents/Mine/Research/Korosuke/Server/data"
+UPLOAD_DIR = "/Users/sushilpandey/Documents/Mine/Research/Korosuke/ModelServer/data"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class Uploadda(BaseModel):
