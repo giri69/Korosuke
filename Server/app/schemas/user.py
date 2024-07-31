@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional, List
-from app.schemas.project import Project
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -17,7 +16,6 @@ class User(UserBase):
     email_verified: bool
     account_created: datetime
     modified_date: Optional[datetime] = None
-    projects: List["Project"] = []
 
     class Config:
         orm_mode = True
