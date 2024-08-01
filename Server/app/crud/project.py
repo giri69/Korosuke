@@ -34,14 +34,20 @@ def update_project(db: Session, project_id: int, data: dict):
         project = db.query(Project).filter_by(id=project_id).first()
         if not project:
             raise HTTPException(status_code=404, detail=f"Project with ID {project_id} not found")
+        
         for key, value in data.items():
             setattr(project, key, value)
+        
+        # Update the modified_at field to the current UTC time
+        project.modified_at = datetime.now(timezone.utc)
+        
         db.commit()
+        db.refresh(project)
         return project
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail="An error occurred while updating the project")
-
+    
 def get_project(db: Session, project_id: int):
     project = db.query(Project).filter_by(id=project_id).first()
     if not project:
