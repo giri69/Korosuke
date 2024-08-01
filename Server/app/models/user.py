@@ -15,4 +15,8 @@ class User(Base):
     account_created = Column(DateTime(timezone=True), server_default=func.now())
     modified_date = Column(DateTime(timezone=True), onupdate=func.now())
 
-    projects = relationship("Project", back_populates="owner")
+    # Change 'owner' to 'user' to match the Project model
+    projects = relationship("Project", back_populates="user")
+
+    def __repr__(self):
+        return f"User(id={self.id}, name='{self.name}')"
