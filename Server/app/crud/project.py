@@ -2,18 +2,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from fastapi import HTTPException
 from app.models.Project import Project
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from fastapi import HTTPException
 from datetime import datetime, timezone
-
 
 def create_project(db: Session, data: dict):
     try:
-        # Set created_at to the current UTC time
         data['created_at'] = datetime.now(timezone.utc)
-
-        # Set default user_id to 6 if user_id is not provided or is 0
+        
         if 'user_id' not in data or data['user_id'] == 0:
             data['user_id'] = 6
         
@@ -34,7 +28,6 @@ def create_project(db: Session, data: dict):
         db.rollback()
         print("Level 2.3: General error occurred", str(e))
         raise HTTPException(status_code=500, detail="An unknown error occurred while creating the project")
-
 
 def update_project(db: Session, project_id: int, data: dict):
     try:
