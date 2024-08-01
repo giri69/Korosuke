@@ -10,8 +10,6 @@ from datetime import datetime, timezone
 
 def create_project(db: Session, data: dict):
     try:
-        print("Level 1: Starting project creation")
-        
         # Set created_at to the current UTC time
         data['created_at'] = datetime.now(timezone.utc)
 
@@ -20,13 +18,9 @@ def create_project(db: Session, data: dict):
             data['user_id'] = 6
         
         project = Project(**data)
-        print("Level 2: Project instance created:", project)
         db.add(project)
-        print("Level 3: Project added to session")
         db.commit()
-        print("Level 4: Session committed")
         db.refresh(project)
-        print("Level 5: Project refreshed from database")
         return project
     except IntegrityError as ie:
         db.rollback()
@@ -60,3 +54,6 @@ def get_project(db: Session, project_id: int):
     if not project:
         raise HTTPException(status_code=404, detail=f"Project with ID {project_id} not found")
     return project
+
+def get_projects_by_user_id(db: Session, user_id: int):
+    return db.query(Project).filter(Project.user_id == user_id).all()
