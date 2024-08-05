@@ -15,12 +15,23 @@ from langchain_community.llms import Ollama
 
 app = FastAPI()
 
+# Global variable initialization
+runningproject = "default"
+
 def startmodal(username: str):
     global runningproject
-    runningproject=username
+    runningproject = username
     print(runningproject)
+    
+    # Load environment variables
     load_dotenv()
-    loader = PyPDFDirectoryLoader('data/'+username)
+    
+    # Delete existing Chroma DB folder
+    if os.path.exists("./chroma_db"):
+        shutil.rmtree("./chroma_db")
+    
+    # Load and split documents
+    loader = PyPDFDirectoryLoader(f'data/{username}')
     documents = loader.load()
     text_splitter = CharacterTextSplitter(
         separator="\n\n",
@@ -31,9 +42,11 @@ def startmodal(username: str):
     )
     chunks = text_splitter.split_documents(documents)
     
+    # Create Chroma index and retriever
     index = Chroma.from_documents(chunks, OllamaEmbeddings(model="mxbai-embed-large", show_progress=True), persist_directory="./chroma_db")
     retriever = index.as_retriever()
     
+    # Define prompt template
     template = """
     Answer the following question:
     Question: {question}
@@ -81,10 +94,10 @@ async def root():
 async def list_files(username: str = Query(...)):
     try:
         userobj = Usermodel(username=username) 
-        UPLOAD_DIR = 'data' + '/' + userobj.username
-        if not os.path.exists(UPLOAD_DIR):
+        user_upload_dir = os.path.join('data', userobj.username)
+        if not os.path.exists(user_upload_dir):
             return {"error": "Directory not found"}
-        files = [file for file in os.listdir(UPLOAD_DIR) if file.endswith('.pdf')]
+        files = [file for file in os.listdir(user_upload_dir) if file.endswith('.pdf')]
         return {"files": files}
     except Exception as e:
         return {"error": str(e)}
@@ -99,15 +112,18 @@ async def ask_question(data: Uploadda):
 
 @app.post("/upload/")
 async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
-    userobj = Usermodel(username=username) 
-    global runningproject
-    runningproject = "fileschanged"
-    UPLOAD_DIR = 'data' + '/' + userobj.username
-    file_location = os.path.join(UPLOAD_DIR, file.filename)
-    os.makedirs(UPLOAD_DIR, exist_ok=True) 
-    with open(file_location, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"info": f"file '{file.filename}' saved at '{file_location}'"}
+    try:
+        userobj = Usermodel(username=username) 
+        global runningproject
+        runningproject = "fileschanged"
+        user_upload_dir = os.path.join('data', userobj.username)
+        file_location = os.path.join(user_upload_dir, file.filename)
+        os.makedirs(user_upload_dir, exist_ok=True) 
+        with open(file_location, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"info": f"file '{file.filename}' saved at '{file_location}'"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/start_model/")
 async def start_model_endpoint(username: str = Form(...)):
@@ -123,9 +139,9 @@ async def delete_file(filename: str, username: str = Query(...)):
     try:
         userobj = Usermodel(username=username)
         global runningproject 
-        runningproject="fileschanged"
-        UPLOAD_DIR = 'data' + '/' + userobj.username
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        runningproject = "fileschanged"
+        user_upload_dir = os.path.join('data', userobj.username)
+        file_path = os.path.join(user_upload_dir, filename)
         if os.path.isfile(file_path):
             os.remove(file_path)
             return {"message": f"File '{filename}' deleted successfully"}
@@ -138,13 +154,9 @@ async def delete_file(filename: str, username: str = Query(...)):
 async def getmodelname():
     try:
         print("asked")
-        return {
-            "modelname": runningproject
-        }
+        return {"modelname": runningproject}
     except Exception as e:
         return {"error": str(e)}
-runningproject="default"
-startmodal(runningproject)
 
 if __name__ == "__main__":
     import uvicorn
