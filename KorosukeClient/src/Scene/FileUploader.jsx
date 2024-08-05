@@ -9,33 +9,40 @@ const FileUploader = () => {
   const [modelPreparing, setModelPreparing] = useState(false);
 
   const fetchFiles = async () => {
+    const username = 'sushil';
+
     try {
-      const response = await axios.get('http://127.0.0.1:8000/files');
-      setFiles(response.data.files);
+        const response = await axios.get('http://127.0.0.1:8000/files/', {
+            params: {
+                username: username
+            }
+        });
+        setFiles(response.data.files);
     } catch (error) {
-      console.error('Error fetching files:', error);
+        console.error('Error fetching files:', error);
     }
-  };
+};
 
   const handleFileUpload = async (event) => {
     const formData = new FormData();
     formData.append('file', event.target.files[0]);
+    formData.append('username', 'sushil'); 
 
     setUploading(true);
 
     try {
-      await axios.post('http://127.0.0.1:8000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      fetchFiles();
+        await axios.post('http://127.0.0.1:8000/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        fetchFiles();
     } catch (error) {
-      console.error('Error uploading file:', error);
+        console.error('Error uploading file:', error);
     } finally {
-      setUploading(false);
+        setUploading(false);
     }
-  };
+};
 
   const handlePrepareModel = async () => {
     setModelPreparing(true);

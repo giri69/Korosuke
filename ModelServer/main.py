@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -15,10 +15,14 @@ from langchain_community.llms import Ollama
 
 app = FastAPI()
 
+runningprject = ""
+
 def startmodal():
     load_dotenv()
     loader = PyPDFDirectoryLoader('data/')
     documents = loader.load()
+    for i, document in enumerate(documents):
+        print(f"Document {i}: {document}")
     text_splitter = CharacterTextSplitter(
         separator="\n\n",
         chunk_size=200,
@@ -66,13 +70,21 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 class Uploadda(BaseModel):
     name: str
 
+class Usermodel:
+    def __init__(self, username: str):
+        self.username = username
+
 @app.get('/')
 async def root():
     return {"message": "API is up and running"}
 
 @app.get("/files/")
-async def list_files():
+async def list_files(username: str = Query(...)):
     try:
+        userobj = Usermodel(username=username) 
+        UPLOAD_DIR = 'data' + '/' + userobj.username
+        if not os.path.exists(UPLOAD_DIR):
+            return {"error": "Directory not found"}
         files = [file for file in os.listdir(UPLOAD_DIR) if file.endswith('.pdf')]
         return {"files": files}
     except Exception as e:
@@ -87,8 +99,11 @@ async def ask_question(data: Uploadda):
         return {"error": str(e)}
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
+    userobj = Usermodel(username=username) 
+    UPLOAD_DIR = 'data' + '/' + userobj.username
     file_location = os.path.join(UPLOAD_DIR, file.filename)
+    os.makedirs(UPLOAD_DIR, exist_ok=True) 
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {"info": f"file '{file.filename}' saved at '{file_location}'"}
@@ -102,8 +117,10 @@ async def start_model_endpoint():
         return {"error": str(e)}
 
 @app.delete("/delete/{filename}")
-async def delete_file(filename: str):
+async def delete_file(filename: str, username: str = Form(...)):
     try:
+        userobj = Usermodel(username=username) 
+        UPLOAD_DIR = 'data' + '/' + userobj.username
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.isfile(file_path):
             os.remove(file_path)
