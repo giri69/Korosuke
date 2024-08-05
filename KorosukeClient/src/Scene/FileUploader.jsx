@@ -2,26 +2,35 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-
 const FileUploader = () => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [modelPreparing, setModelPreparing] = useState(false);
+  const [chatbtn, setChat] = useState(false);
+
+  const fetchCurrentModel = async () => {
+    try {
+      const res = await axios.get('http://127.0.0.1:8000/currentmodel/');
+      console.log("RES", res.data.modelname);
+      setChat(res.data.modelname === localStorage.getItem('username'));
+    } catch (error) {
+      console.error('Error fetching current model:', error);
+    }
+  };
 
   const fetchFiles = async () => {
     const username = 'sushil';
-
     try {
-        const response = await axios.get('http://127.0.0.1:8000/files/', {
-            params: {
-                username: username
-            }
-        });
-        setFiles(response.data.files);
+      const response = await axios.get('http://127.0.0.1:8000/files/', {
+        params: { username }
+      });
+      setFiles(response.data.files);
+      setChat(false); // Hide chat button when files change
+      await fetchCurrentModel();  // Call to check current model after fetching files
     } catch (error) {
-        console.error('Error fetching files:', error);
+      console.error('Error fetching files:', error);
     }
-};
+  };
 
   const handleFileUpload = async (event) => {
     const formData = new FormData();
@@ -29,25 +38,24 @@ const FileUploader = () => {
     formData.append('username', 'sushil'); 
 
     setUploading(true);
-
     try {
-        await axios.post('http://127.0.0.1:8000/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        fetchFiles();
+      await axios.post('http://127.0.0.1:8000/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      await fetchFiles();  
     } catch (error) {
-        console.error('Error uploading file:', error);
+      console.error('Error uploading file:', error);
     } finally {
-        setUploading(false);
+      setUploading(false);
     }
-};
+  };
 
   const handlePrepareModel = async () => {
     setModelPreparing(true);
+    const formData = new FormData();
+    formData.append('username', 'sushil'); 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/start_model/');
+      const response = await axios.post('http://127.0.0.1:8000/start_model/', formData);
       if (response.status === 200) {
         alert('Model prepared successfully');
       }
@@ -55,13 +63,14 @@ const FileUploader = () => {
       console.error('Error preparing model:', error);
     } finally {
       setModelPreparing(false);
+      await fetchCurrentModel();  // Check current model after preparing model
     }
   };
 
   const handleDeleteFile = async (filename) => {
     try {
       await axios.delete(`http://127.0.0.1:8000/delete/${filename}`);
-      fetchFiles();
+      await fetchFiles();  // Refetch files after deletion
     } catch (error) {
       console.error('Error deleting file:', error);
     }
@@ -69,6 +78,7 @@ const FileUploader = () => {
 
   useEffect(() => {
     fetchFiles();
+    localStorage.setItem('username', "sushil");
   }, []);
 
   return (
@@ -107,7 +117,11 @@ const FileUploader = () => {
           >
             {modelPreparing ? 'Preparing model...' : 'Prepare model'}
           </button>
-          <Link to={"/testchat"}><button style={styles.chatButton}>Chat</button></Link>
+          {chatbtn && (
+            <Link to={"/testchat"}>
+              <button style={styles.chatButton}>Chat</button>
+            </Link>
+          )}
         </div>
       )}
     </div>

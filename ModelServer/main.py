@@ -15,11 +15,12 @@ from langchain_community.llms import Ollama
 
 app = FastAPI()
 
-runningprject = ""
-
-def startmodal():
+def startmodal(username: str):
+    global runningproject
+    runningproject=username
+    print(runningproject)
     load_dotenv()
-    loader = PyPDFDirectoryLoader('data/')
+    loader = PyPDFDirectoryLoader('data/'+username)
     documents = loader.load()
     for i, document in enumerate(documents):
         print(f"Document {i}: {document}")
@@ -101,6 +102,8 @@ async def ask_question(data: Uploadda):
 @app.post("/upload/")
 async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
     userobj = Usermodel(username=username) 
+    global runningproject
+    runningproject = "fileschanged"
     UPLOAD_DIR = 'data' + '/' + userobj.username
     file_location = os.path.join(UPLOAD_DIR, file.filename)
     os.makedirs(UPLOAD_DIR, exist_ok=True) 
@@ -109,9 +112,10 @@ async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
     return {"info": f"file '{file.filename}' saved at '{file_location}'"}
 
 @app.post("/start_model/")
-async def start_model_endpoint():
+async def start_model_endpoint(username: str = Form(...)):
     try:
-        startmodal()
+        userobj = Usermodel(username=username) 
+        startmodal(userobj.username)
         return {"message": "Model preparation started successfully"}
     except Exception as e:
         return {"error": str(e)}
@@ -120,6 +124,7 @@ async def start_model_endpoint():
 async def delete_file(filename: str, username: str = Form(...)):
     try:
         userobj = Usermodel(username=username) 
+        runningproject="fileschanged"
         UPLOAD_DIR = 'data' + '/' + userobj.username
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.isfile(file_path):
@@ -130,7 +135,17 @@ async def delete_file(filename: str, username: str = Form(...)):
     except Exception as e:
         return {"error": str(e)}
 
-startmodal()
+@app.get('/currentmodel/')
+async def getmodelname():
+    try:
+        print("asked")
+        return {
+            "modelname": runningproject
+        }
+    except Exception as e:
+        return {"error": str(e)}
+runningproject="default"
+startmodal(runningproject)
 
 if __name__ == "__main__":
     import uvicorn
