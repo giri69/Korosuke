@@ -68,13 +68,16 @@ const FileUploader = () => {
   };
 
   const handleDeleteFile = async (filename) => {
+    const username = localStorage.getItem('username');
     try {
-      await axios.delete(`http://127.0.0.1:8000/delete/${filename}`);
-      await fetchFiles();  // Refetch files after deletion
+        await axios.delete(`http://127.0.0.1:8000/delete/${filename}`, {
+            params: { username }
+        });
+        await fetchFiles();  // Refetch files after deletion
     } catch (error) {
-      console.error('Error deleting file:', error);
+        console.error('Error deleting file:', error);
     }
-  };
+};
 
   useEffect(() => {
     fetchFiles();

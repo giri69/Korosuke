@@ -22,8 +22,6 @@ def startmodal(username: str):
     load_dotenv()
     loader = PyPDFDirectoryLoader('data/'+username)
     documents = loader.load()
-    for i, document in enumerate(documents):
-        print(f"Document {i}: {document}")
     text_splitter = CharacterTextSplitter(
         separator="\n\n",
         chunk_size=200,
@@ -121,9 +119,10 @@ async def start_model_endpoint(username: str = Form(...)):
         return {"error": str(e)}
 
 @app.delete("/delete/{filename}")
-async def delete_file(filename: str, username: str = Form(...)):
+async def delete_file(filename: str, username: str = Query(...)):
     try:
-        userobj = Usermodel(username=username) 
+        userobj = Usermodel(username=username)
+        global runningproject 
         runningproject="fileschanged"
         UPLOAD_DIR = 'data' + '/' + userobj.username
         file_path = os.path.join(UPLOAD_DIR, filename)

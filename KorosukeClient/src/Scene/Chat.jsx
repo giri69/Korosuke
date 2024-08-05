@@ -33,7 +33,7 @@ function App() {
 
     try {
       // Send message to FastAPI endpoint (replace with your actual endpoint)
-      const response = await axios.post('http://127.0.0.1:8000/ask', { name: inputMessage });
+      const response = await axios.post('http://127.0.0.1:8000/ask', { name: inputMessage, username: localStorage.getItem('username') });
       const botResponse = response.data.message;
 
       // Add bot response to state
@@ -41,7 +41,6 @@ function App() {
       setMessages(prevMessages => [...prevMessages, newBotMessage]);
     } catch (error) {
       console.error('Error fetching response:', error);
-      // Handle error (optional)
     }
   };
 
