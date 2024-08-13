@@ -43,7 +43,7 @@ def startmodal(username: str):
     chunks = text_splitter.split_documents(documents)
     
     # Create Chroma index and retriever
-    index = Chroma.from_documents(chunks, OllamaEmbeddings(model="mxbai-embed-large", show_progress=True), persist_directory="./chroma_db")
+    index = Chroma.from_documents(chunks, OllamaEmbeddings(model="llama3", show_progress=True), persist_directory="./chroma_db")
     retriever = index.as_retriever()
     
     # Define prompt template
