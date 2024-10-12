@@ -7,9 +7,7 @@ Korosuke is a hardware-based solution designed to act as a single point of acces
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Project Contributors](#project-contributors)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Usage](#usage)
+
 
 ## Overview
 
