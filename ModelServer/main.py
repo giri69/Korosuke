@@ -5,7 +5,7 @@ import os
 import shutil
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 from operator import itemgetter
@@ -22,40 +22,46 @@ def startmodal(username: str):
     global runningproject
     runningproject = username
     print(runningproject)
-    
+
     # Load environment variables
     load_dotenv()
-    
+
     # Delete existing Chroma DB folder
     if os.path.exists("./chroma_db"):
         shutil.rmtree("./chroma_db")
-    
+
     # Load and split documents
     loader = PyPDFDirectoryLoader(f'data/{username}')
     documents = loader.load()
-    text_splitter = CharacterTextSplitter(
-        separator="\n\n",
-        chunk_size=200,
-        chunk_overlap=50,
-        length_function=len,
-        is_separator_regex=False,
+
+    # Optimized text splitting using RecursiveCharacterTextSplitter
+    text_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", ".", "!", "?"],  # Natural boundaries: paragraphs and sentences
+        chunk_size=1000,  # Larger chunk size to retain more context
+        chunk_overlap=150  # Small overlap to maintain coherence across chunks
     )
     chunks = text_splitter.split_documents(documents)
-    
+
     # Create Chroma index and retriever
     index = Chroma.from_documents(chunks, OllamaEmbeddings(model="llama3", show_progress=True), persist_directory="./chroma_db")
     retriever = index.as_retriever()
-    
-    # Define prompt template
+
+    # Optimized prompt template with clearer instructions and examples for the model
     template = """
-    Answer the following question:
-    Question: {question}
-    Answer the question based only on the following context:
+    You are a helpful assistant with access to the following document context. 
+    Answer the question **based ONLY on this context**. If the context doesn't have the information, say "I don't know".
+    
+    Document Context: 
     {context}
+    
+    Question: {question}
+    
+    Please provide a clear and concise answer in a few sentences.
     """
+    
     prompt = ChatPromptTemplate.from_template(template)
     model = Ollama(model="qwen2:0.5b")
-    
+
     global rag_chain
     rag_chain = (
         {
@@ -93,7 +99,7 @@ async def root():
 @app.get("/files/")
 async def list_files(username: str = Query(...)):
     try:
-        userobj = Usermodel(username=username) 
+        userobj = Usermodel(username=username)
         user_upload_dir = os.path.join('data', userobj.username)
         if not os.path.exists(user_upload_dir):
             return {"error": "Directory not found"}
@@ -113,12 +119,12 @@ async def ask_question(data: Uploadda):
 @app.post("/upload/")
 async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
     try:
-        userobj = Usermodel(username=username) 
+        userobj = Usermodel(username=username)
         global runningproject
         runningproject = "fileschanged"
         user_upload_dir = os.path.join('data', userobj.username)
         file_location = os.path.join(user_upload_dir, file.filename)
-        os.makedirs(user_upload_dir, exist_ok=True) 
+        os.makedirs(user_upload_dir, exist_ok=True)
         with open(file_location, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         return {"info": f"file '{file.filename}' saved at '{file_location}'"}
@@ -128,7 +134,7 @@ async def upload_file(username: str = Form(...), file: UploadFile = File(...)):
 @app.post("/start_model/")
 async def start_model_endpoint(username: str = Form(...)):
     try:
-        userobj = Usermodel(username=username) 
+        userobj = Usermodel(username=username)
         startmodal(userobj.username)
         return {"message": "Model preparation started successfully"}
     except Exception as e:
@@ -138,7 +144,7 @@ async def start_model_endpoint(username: str = Form(...)):
 async def delete_file(filename: str, username: str = Query(...)):
     try:
         userobj = Usermodel(username=username)
-        global runningproject 
+        global runningproject
         runningproject = "fileschanged"
         user_upload_dir = os.path.join('data', userobj.username)
         file_path = os.path.join(user_upload_dir, filename)
@@ -153,7 +159,6 @@ async def delete_file(filename: str, username: str = Query(...)):
 @app.get('/currentmodel/')
 async def getmodelname():
     try:
-        print("asked")
         return {"modelname": runningproject}
     except Exception as e:
         return {"error": str(e)}
