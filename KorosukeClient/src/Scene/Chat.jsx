@@ -16,12 +16,10 @@ function App() {
   };
 
   useEffect(() => {
-    // Scroll to bottom on initial load
     scrollToBottom();
   }, [scrollToBottom]);
 
   useEffect(() => {
-    // Scroll to bottom on new message
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
